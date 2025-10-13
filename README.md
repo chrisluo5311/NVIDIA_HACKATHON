@@ -1,130 +1,173 @@
-# NVIDIA Hackathon - Meta Integrator Agent
+# AI Betting Market Simulator
 
-這是一個整合多個投資人代理觀點的 AI 系統，使用 NVIDIA Nemotron 模型來協調樂觀投資人和風險控制投資人的分析。
+An AI prediction market simulator that uses multiple AI Agents with **REAL SEARCH CAPABILITIES** to simulate crowd intelligence predictions.
 
-## 功能特色
+## 🎯 NEW: Real Search Capabilities!
 
-- **多代理協調**: 同時運行樂觀投資人和風險控制投資人代理
-- **觀點整合**: 使用 NVIDIA Llama-3.3 Nemotron Super 49B 模型整合不同觀點
-- **機率計算**: 自動計算加權平均機率和分歧度
-- **投資級分析**: 提供專業的投資建議和風險評估
+Both AI Agents now have **actual internet search abilities**:
 
-## 文件結構
+### 🔬 Technical Expert Agent
+- ✅ **Real-time web search** - Searches latest news and information
+- ✅ **Live financial data** - Fetches actual stock prices and market data
+- ✅ **Company news** - Gathers recent company announcements and reports
+- ✅ **Data-driven analysis** - Makes predictions based on REAL data
 
-```
-├── meta_integrator_agent.py      # 主要整合代理
-├── optimistic_investor_agent.py   # 樂觀投資人代理
-├── risk_control_investor_agent.py # 風險控制投資人代理
-├── requirements.txt              # Python 依賴
-├── test_meta_integrator.py       # 測試腳本
-└── README.md                    # 說明文件
-```
+### 😤 Hater Agent
+- ✅ **Reddit search** - Finds actual Reddit discussions and comments
+- ✅ **Twitter/X search** - Discovers real tweets and opinions
+- ✅ **Negative sentiment mining** - Collects genuine criticism and complaints
+- ✅ **Real hate, real comments** - Bases opinions on actual online negativity
 
-## 安裝與設置
+## Setup
 
-1. **安裝依賴**:
-   ```bash
-   pip3 install -r requirements.txt
-   ```
-
-2. **設置環境變數**:
-   創建 `.env` 文件並添加你的 API 金鑰：
-   ```
-   NVIDIA_API_KEY=your_nvidia_api_key_here
-   NEWSAPI_KEY=your_newsapi_key_here  # 可選
-   ```
-
-## 使用方法
-
-### 交互式模式
+1. Install dependencies:
 ```bash
-python3 meta_integrator_agent.py
+pip install -r requirements.txt
 ```
 
-然後輸入你的投資問題，例如：
-- "Will NVDA outperform SPY over the next quarter?"
-- "What are the risks and opportunities for AAPL in the next 90 days?"
-- "Should I invest in TSLA given current market conditions?"
+2. API Key is already built into the code, no additional configuration needed!
 
-### 測試模式
+## Usage
+
+**Run Technical Expert (with real data search):**
 ```bash
-python3 test_meta_integrator.py
+python run_technical_expert.py
 ```
 
-## 工作流程
-
-1. **接收查詢**: 用戶輸入投資問題
-2. **代理協調**: 
-   - 運行樂觀投資人代理 (Optimistic Investor)
-   - 運行風險控制投資人代理 (Risk-Control Investor)
-3. **觀點整合**: 
-   - 收集兩個代理的機率和推理
-   - 計算加權平均機率和分歧度
-   - 使用 Meta-Integrator 模型整合觀點
-4. **最終分析**: 提供綜合的投資建議和機率評估
-
-## 代理特色
-
-### 樂觀投資人 (Optimistic Investor)
-- 專注於上行潛力和催化劑
-- 提供事件規劃和時間表
-- 使用工具獲取新聞、股價和公司事件
-- 給出樂觀但基於事實的評估
-
-### 風險控制投資人 (Risk-Control Investor)
-- 優先考慮資本保護和風險控制
-- 量化風險和提供對沖建議
-- 建立監控時間表和觸發機制
-- 給出風險優先的評估
-
-### Meta-Integrator
-- 整合兩個代理的觀點
-- 解決衝突並解釋分歧
-- 提供最終的投資級綜合分析
-- 給出單一的最終機率評估
-
-## 技術架構
-
-- **LLM**: NVIDIA Llama-3.3 Nemotron Super 49B v1.5
-- **API**: NVIDIA Integrate API
-- **工具**: yfinance, NewsAPI, RSS feeds
-- **框架**: OpenAI SDK, Pydantic
-
-## 範例輸出
-
-```
->>> Meta-Integrator Agent (NVIDIA Llama-3.3 Nemotron Super 49B v1.5) <<<
-Analyzing: Will NVDA outperform SPY over the next quarter?
-
-=== Running Optimistic Investor ===
-[樂觀投資人的分析...]
-
-=== Running Risk-Control Investor ===
-[風險控制投資人的分析...]
-
---- Integration Preview ---
-Question: Will NVDA outperform SPY over the next quarter?
-Inputs:
- • Optimistic Investor: 75.00%  (w=1.0)  — AI chip demand tailwinds...
- • Risk-Control Investor: 45.00%  (w=1.0)  — High valuation concerns...
-Weighted Probability: 60.00%  | Disagreement≈15.00pp | N=2
-
-=== Final Integrated Analysis ===
-[整合後的最終分析...]
-Overall Probability: 62.50%
+**Run Hater (with real social media search):**
+```bash
+python run_hater.py
 ```
 
-## 注意事項
+**Run Full Demo (compare both Agents with real data):**
+```bash
+python run_demo.py
+```
 
-- 需要有效的 NVIDIA API 金鑰
-- 某些功能需要網路連接來獲取即時數據
-- 投資建議僅供參考，不構成投資建議
-- 請根據自己的風險承受能力做出投資決策
+**Test Search Tools Only:**
+```bash
+python search_tools.py
+```
 
-## 故障排除
+## Example Questions
 
-如果遇到問題，請檢查：
-1. API 金鑰是否正確設置
-2. 網路連接是否正常
-3. 所有依賴是否已正確安裝
-4. Python 版本是否為 3.9 或更高
+Try asking these questions:
+- Will Apple release Vision Pro 2 in 2025?
+- Will Tesla launch a $50k electric car in 2025?
+- Will TSMC mass-produce 1nm chips in 2026?
+- Will OpenAI release GPT-5 in 2024?
+- Will Meta's metaverse succeed?
+- Will NVIDIA stock reach $200 in 2025?
+
+## How It Works
+
+### Technical Expert Agent Flow:
+1. 📡 **Gathers Real Data**
+   - Searches the web for latest information
+   - Fetches live stock prices if relevant
+   - Collects recent company news
+
+2. 📊 **Analyzes Real Data**
+   - AI analyzes the actual data gathered
+   - Makes informed predictions based on facts
+   - Provides probability and investment recommendation
+
+3. 💰 **Returns Data-Driven Prediction**
+   - Prediction backed by real research
+   - Includes all source URLs for verification
+
+### Hater Agent Flow:
+1. 📡 **Searches for Negativity**
+   - Scans Reddit discussions
+   - Searches Twitter/X for complaints
+   - Finds critical reviews and opinions
+
+2. 💬 **Channels Real Hate**
+   - AI reads actual negative comments
+   - Mimics real hater sentiment
+   - Provides pessimistic prediction
+
+3. 😤 **Returns Hate-Driven Prediction**
+   - Prediction influenced by real online negativity
+   - Includes actual hater comments found
+
+## Features
+
+### Technical Expert Agent
+- ✅ Uses lower temperature (0.6) to stay rational
+- ✅ **REAL internet search** via DuckDuckGo
+- ✅ **REAL stock data** via Yahoo Finance
+- ✅ Structured analysis based on actual data
+- ✅ Considers market, technology, finance, competition
+
+### Hater Agent
+- ✅ Uses higher temperature (0.9) for emotional responses
+- ✅ **REAL Reddit discussions** via web search
+- ✅ **REAL Twitter opinions** via social search
+- ✅ Bases negativity on actual online comments
+- ✅ Casual, emotional expression style
+
+## Technical Details
+
+### Search Tools (`search_tools.py`)
+- **WebSearchTool** - DuckDuckGo search (no API key needed)
+- **FinancialDataTool** - Yahoo Finance data (free)
+- **SocialMediaTool** - Reddit & Twitter search (web scraping)
+
+### No API Keys Required!
+All search tools use free, public data sources:
+- Web search via DuckDuckGo HTML
+- Stock data via Yahoo Finance public API
+- Social media via web scraping
+
+## Example Output
+
+```
+🔬 Technical Expert AI Agent Starting Analysis...
+   WITH REAL-TIME DATA SEARCH
+
+📡 Gathering Real-Time Data...
+🔍 Searching web for: Will Apple release Vision Pro 2...
+   1. Vision Pro 2 Release Date, Features, and Upgrades...
+   2. Apple Vision Pro 2 - all the rumors so far...
+   3. Vision Pro 2 is coming soon with three upgrades...
+
+💰 Fetching financial data for: AAPL...
+   AAPL: $249.15
+
+📰 Searching for company news...
+   1. Apple announces new AR features...
+   2. Vision Pro sales exceed expectations...
+
+📊 Technical Expert's Analysis (Based on Real Data):
+[AI analyzes the actual data gathered above...]
+```
+
+## Future Expansion
+
+Possible additions:
+- 🎯 Optimistic Investor Agent
+- 🛡️ Risk Manager Agent
+- 📊 Sentiment Analysis Agent
+- 🎲 Weighted prediction market system
+
+## Quick Test
+
+```bash
+# Set encoding (Windows CMD)
+chcp 65001
+
+# Run full demo with real search
+python run_demo.py
+```
+
+## Performance Notes
+
+- First search may take 10-20 seconds (gathering real data)
+- Web searches are rate-limited to avoid blocking
+- Stock data updates in real-time during market hours
+
+---
+
+Made with ❤️ for NVIDIA Hackathon  
+**NOW WITH REAL SEARCH CAPABILITIES!** 🚀
