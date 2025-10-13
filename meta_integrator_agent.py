@@ -36,6 +36,8 @@ client = OpenAI(base_url=NVIDIA_BASE_URL, api_key=NVIDIA_API_KEY)
 # Import the agent functions from the other modules
 from optimistic_investor_agent import run_optimistic_investor, llm_chat as optimistic_llm_chat, SYSTEM_PROMPT as OPTIMISTIC_SYSTEM_PROMPT
 from risk_control_investor_agent import run_risk_control_investor_dialogue, llm_chat as risk_control_llm_chat, SYSTEM_PROMPT as RISK_CONTROL_SYSTEM_PROMPT
+from hater_agent import HaterAgent
+from technical_expert_agent import TechnicalExpertAgent
 
 # ============ Schema ============
 class AgentReport(BaseModel):
@@ -50,16 +52,17 @@ class AggregationInput(BaseModel):
 
 # ============ System Prompt ============
 SYSTEM_PROMPT = """\
-You are "Meta-Integrator" — a senior meta-analyst that combines multiple agents' forecasts.
+You are "Meta-Integrator" — a senior meta-analyst that combines four specialized agents' forecasts.
 Your job:
-- Read each agent's probability and reasoning.
+- Read each agent's probability and reasoning (Optimistic Investor, Risk-Control Investor, Hater Agent, Technical Expert).
 - Compute a coherent final view: reconcile conflicts, highlight consensus vs. disagreement.
-- Use your own broad knowledge to stress test their reasoning (but do not fabricate facts).
+- Use your knowledge to stress test their reasoning (but do not fabricate facts).
 - Output a crisp investor-grade synthesis with a single final probability.
 
 Rules:
 - Be concise and precise. Avoid hedging clichés; show specific drivers and uncertainties.
 - If agents disagree, explain why and which evidence should dominate.
+- Consider the different perspectives: bullish optimism, risk management, pessimistic sentiment, and technical analysis.
 - End with a single line: "Overall Probability: XX.XX%"
 """
 
@@ -166,6 +169,10 @@ def run_optimistic_agent_direct(query: str) -> Dict[str, Any]:
             if "final_answer" in action_dict:
                 final_text = action_dict["final_answer"]
                 
+                # Ensure final_text is a string
+                if isinstance(final_text, dict):
+                    final_text = str(final_text)
+                
                 # Extract probability from the text
                 import re
                 prob_match = re.search(r'(\d+\.?\d*)%', final_text)
@@ -232,6 +239,10 @@ def run_risk_control_agent_direct(query: str) -> Dict[str, Any]:
                 print(final_text)
                 print(f"\n[Overall Probability: {probability:.2f}%]\n")
                 
+                # Ensure final_text is a string
+                if isinstance(final_text, dict):
+                    final_text = str(final_text)
+                
                 return {
                     "name": "Risk-Control Investor",
                     "probability": float(probability),
@@ -263,6 +274,80 @@ def run_risk_control_agent_direct(query: str) -> Dict[str, Any]:
         "weight": 1.0
     }
 
+def run_hater_agent_direct(query: str) -> Dict[str, Any]:
+    """
+    Run hater agent directly and extract results.
+    """
+    print(f"\n=== Running Hater Agent ===")
+    
+    try:
+        hater_agent = HaterAgent()
+        result = hater_agent.analyze(query)
+        
+        if result:
+            print(f"\n=== Hater Agent — Final View ===\n")
+            print(result.get('full_analysis', 'No analysis available'))
+            print(f"\n[Overall Probability: {result.get('probability', 20):.2f}%]\n")
+            
+            return {
+                "name": "Hater Agent",
+                "probability": float(result.get('probability', 20)),
+                "reasoning": result.get('reasoning', 'Hater analysis based on real online comments')[:500] + "..." if len(result.get('reasoning', '')) > 500 else result.get('reasoning', 'Hater analysis based on real online comments'),
+                "weight": 1.0
+            }
+        else:
+            return {
+                "name": "Hater Agent",
+                "probability": 20.0,
+                "reasoning": "Unable to get complete hater analysis",
+                "weight": 1.0
+            }
+    except Exception as e:
+        print(f"Error running hater agent: {e}")
+        return {
+            "name": "Hater Agent",
+            "probability": 20.0,
+            "reasoning": f"Error occurred while running hater agent: {str(e)}",
+            "weight": 1.0
+        }
+
+def run_technical_expert_agent_direct(query: str) -> Dict[str, Any]:
+    """
+    Run technical expert agent directly and extract results.
+    """
+    print(f"\n=== Running Technical Expert Agent ===")
+    
+    try:
+        tech_agent = TechnicalExpertAgent()
+        result = tech_agent.analyze(query)
+        
+        if result:
+            print(f"\n=== Technical Expert Agent — Final View ===\n")
+            print(result.get('full_analysis', 'No analysis available'))
+            print(f"\n[Overall Probability: {result.get('probability', 50):.2f}%]\n")
+            
+            return {
+                "name": "Technical Expert Agent",
+                "probability": float(result.get('probability', 50)),
+                "reasoning": result.get('reasoning', 'Technical analysis based on real data')[:500] + "..." if len(result.get('reasoning', '')) > 500 else result.get('reasoning', 'Technical analysis based on real data'),
+                "weight": 1.0
+            }
+        else:
+            return {
+                "name": "Technical Expert Agent",
+                "probability": 50.0,
+                "reasoning": "Unable to get complete technical analysis",
+                "weight": 1.0
+            }
+    except Exception as e:
+        print(f"Error running technical expert agent: {e}")
+        return {
+            "name": "Technical Expert Agent",
+            "probability": 50.0,
+            "reasoning": f"Error occurred while running technical expert agent: {str(e)}",
+            "weight": 1.0
+        }
+
 # ============ Helper: aggregation ============
 def aggregate_probability(reports: List[AgentReport]) -> Dict[str, Any]:
     # Default equal weights unless provided
@@ -292,7 +377,12 @@ def llm_stream_synthesis(question: str, reports: List[AgentReport], agg: Dict[st
     payload = {
         "question": question,
         "reports": [
-            {"name": r.name, "probability": r.probability, "reasoning": r.reasoning, "weight": float(r.weight) if r.weight else 1.0}
+            {
+                "name": r.name, 
+                "probability": r.probability, 
+                "reasoning": r.reasoning[:300] + "..." if len(r.reasoning) > 300 else r.reasoning,  # Truncate long reasoning
+                "weight": float(r.weight) if r.weight else 1.0
+            }
             for r in reports
         ],
         "aggregate": agg,
@@ -300,8 +390,7 @@ def llm_stream_synthesis(question: str, reports: List[AgentReport], agg: Dict[st
             "style": "concise investor-grade synthesis",
             "requirements": [
                 "Reconcile conflicts; explain why.",
-                "Incorporate model knowledge prudently; no hallucinated specifics.",
-                "Conclude with 'Overall Probability: XX.XX%' where XX.XX equals the best integrated estimate (two decimals)."
+                "Conclude with 'Overall Probability: XX.XX%' (two decimals)."
             ]
         }
     }
@@ -317,13 +406,13 @@ def llm_stream_synthesis(question: str, reports: List[AgentReport], agg: Dict[st
         messages=messages,
         temperature=0.5,
         top_p=0.9,
-        max_tokens=1600,
+        max_tokens=4096,  # Increased from 1600 to 4096 for longer responses
         frequency_penalty=0,
         presence_penalty=0,
         stream=True,
         extra_body={
             "min_thinking_tokens": 512,
-            "max_thinking_tokens": 1024
+            "max_thinking_tokens": 2048  # Increased from 1024 to 2048
         }
     )
     for chunk in completion:
@@ -345,20 +434,25 @@ def pretty_preview(question: str, reports: List[AgentReport], agg: Dict[str, Any
 # ============ Main Integration Function ============
 def run_meta_integrator(query: str) -> None:
     """
-    Main function that coordinates both agents and integrates their responses.
+    Main function that coordinates all four agents and integrates their responses.
     """
     print(">>> Meta-Integrator Agent (NVIDIA Llama-3.3 Nemotron Super 49B v1.5) <<<")
     print(f"Analyzing: {query}")
     print("\n" + "="*60)
     
-    # Run both agents
+    # Run all four agents
+    print("🔄 Running all four agents in parallel...")
     optimistic_report = run_optimistic_agent_direct(query)
     risk_control_report = run_risk_control_agent_direct(query)
+    hater_report = run_hater_agent_direct(query)
+    technical_expert_report = run_technical_expert_agent_direct(query)
     
     # Convert to AgentReport objects
     reports = [
         AgentReport(**optimistic_report),
-        AgentReport(**risk_control_report)
+        AgentReport(**risk_control_report),
+        AgentReport(**hater_report),
+        AgentReport(**technical_expert_report)
     ]
     
     # Calculate aggregation
@@ -375,11 +469,16 @@ def run_meta_integrator(query: str) -> None:
 # ============ REPL ============
 def run_meta_integrator_dialogue() -> None:
     print(">>> Meta-Integrator Agent (NVIDIA Llama-3.3 Nemotron Super 49B v1.5) <<<")
-    print("Enter your investment question, and I'll coordinate both Optimistic and Risk-Control investors.")
-    print("Examples:")
+    print("Enter your investment question, and I'll coordinate all four specialized agents:")
+    print("  🤖 Optimistic Investor - Bullish analysis with tool access")
+    print("  🛡️ Risk-Control Investor - Conservative risk-first approach")
+    print("  😤 Hater Agent - Pessimistic view based on real online comments")
+    print("  🔬 Technical Expert - Data-driven analysis with real-time research")
+    print("\nExamples:")
     print("  • Will NVDA outperform SPY over the next quarter?")
     print("  • What are the risks and opportunities for AAPL in the next 90 days?")
     print("  • Should I invest in TSLA given current market conditions?")
+    print("  • Will Apple release Vision Pro 2 in 2025?")
     print("\nType 'exit' to quit.\n")
 
     while True:
