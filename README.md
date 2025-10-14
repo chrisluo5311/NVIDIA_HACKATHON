@@ -1,4 +1,4 @@
-# AI Prediction Market Simulator
+# Leonardo AI
 
 A multi-agent AI system that simulates crowd intelligence predictions using **real search capabilities**.
 
